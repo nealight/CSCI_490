@@ -1,23 +1,15 @@
-import twint
-import pandas
+import scrape
+import analyzer
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    for year in range(2005, 2022):
-        # Configure
-        c = twint.Config()
-        c.Search = (f"td OR technical debt")
-        c.Year = year
-        c.Limit = 1000
-        c.Pandas = True
-        c.Pandas_clean = True
-        c.Store_csv = True
-        c.Output = f"./td_dataset_{year}.csv"
+    tweet_scrapper = scrape.Scrape()
+    df = tweet_scrapper.scrape_data(2020, 2021)
 
-        twint.run.Search(c)
-        tweets_df = twint.storage.panda.Tweets_df
+    tweet_analyzer = analyzer.Analyzer(df)
+    tweet_analyzer.analyze()
 
-    # print(tweets_df)
+
 
     pass
 
