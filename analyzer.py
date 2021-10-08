@@ -99,3 +99,42 @@ class Analyzer:
         data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
         print(data_lemmatized[:1])
+
+        # Create Dictionary
+        id2word = corpora.Dictionary(data_lemmatized)
+
+        # Create Corpus
+        texts = data_lemmatized
+
+        # Term Document Frequency
+        corpus = [id2word.doc2bow(text) for text in texts]
+
+        # View
+        print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
+
+        # Build LDA model
+        lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                                    id2word=id2word,
+                                                    num_topics=20,
+                                                    random_state=100,
+                                                    update_every=1,
+                                                    chunksize=100,
+                                                    passes=10,
+                                                    alpha='auto',
+                                                    per_word_topics=True)
+
+        # Print the Keyword in the 10 topics
+        pprint(lda_model.print_topics())
+        doc_lda = lda_model[corpus]
+
+        # Compute Perplexity
+        print('\nPerplexity: ',
+              lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+
+        # Compute Coherence Score
+        coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word,
+                                             coherence='c_v')
+        coherence_lda = coherence_model_lda.get_coherence()
+        print('\nCoherence Score: ', coherence_lda)
+
+

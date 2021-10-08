@@ -5,7 +5,11 @@ import glob
 
 class Scrape:
 
-    def scrape_data(self, start:int, end:int) -> pandas.DataFrame:
+    def scrape_data(self, start:int, end:int, useExistingCSV: bool=True) -> pandas.DataFrame:
+        if useExistingCSV:
+            df = pandas.read_csv("combined_csv.csv")
+            return df
+
         for year in range(start, end):
             # Configure
             c = twint.Config()
