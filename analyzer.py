@@ -20,13 +20,28 @@ import matplotlib.pyplot as plt
 
 # Enable logging for gensim - optional
 import logging
+import os
 
 import warnings
 from nltk.corpus import stopwords
 
+import contextlib
+
+
+def print_and_write(*target: str or (str),  func=print):
+    with open(Analyzer.output_file_path, "a") as o:
+        with contextlib.redirect_stdout(o):
+            print(target)
+    func(target)
+
 class Analyzer:
+    output_file_path = "LDA_result.txt"
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
+        if os.path.exists(Analyzer.output_file_path):
+            os.remove(Analyzer.output_file_path)
+
 
     def analyze(self):
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
@@ -46,7 +61,7 @@ class Analyzer:
         # Remove distracting single quotes
         data = [re.sub("\'", "", sent) for sent in data]
 
-        pprint(data[:1])
+        print_and_write(data[:1], func=pprint)
 
         def sent_to_words(sentences):
             for sentence in sentences:
@@ -54,7 +69,7 @@ class Analyzer:
 
         data_words = list(sent_to_words(data))
 
-        print(data_words[:1])
+        print_and_write(data_words[:1])
 
         # Build the bigram and trigram models
         bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
@@ -65,7 +80,7 @@ class Analyzer:
         trigram_mod = gensim.models.phrases.Phraser(trigram)
 
         # See trigram example
-        print(trigram_mod[bigram_mod[data_words[0]]])
+        print_and_write(trigram_mod[bigram_mod[data_words[0]]])
 
         # Define functions for stopwords, bigrams, trigrams and lemmatization
         def remove_stopwords(texts):
@@ -98,7 +113,7 @@ class Analyzer:
         # Do lemmatization keeping only noun, adj, vb, adv
         data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
-        print(data_lemmatized[:1])
+        print_and_write(data_lemmatized[:1])
 
         # Create Dictionary
         id2word = corpora.Dictionary(data_lemmatized)
@@ -110,7 +125,7 @@ class Analyzer:
         corpus = [id2word.doc2bow(text) for text in texts]
 
         # View
-        print([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
+        print_and_write([[(id2word[id], freq) for id, freq in cp] for cp in corpus[:1]])
 
         # Build LDA model
         lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
@@ -124,17 +139,17 @@ class Analyzer:
                                                     per_word_topics=True)
 
         # Print the Keyword in the 10 topics
-        pprint(lda_model.print_topics())
+        print_and_write(lda_model.print_topics(), func=pprint)
         doc_lda = lda_model[corpus]
 
         # Compute Perplexity
-        print('\nPerplexity: ',
+        print_and_write('\nPerplexity: ',
               lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
 
         # Compute Coherence Score
         coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, dictionary=id2word,
                                              coherence='c_v')
         coherence_lda = coherence_model_lda.get_coherence()
-        print('\nCoherence Score: ', coherence_lda)
+        print_and_write('\nCoherence Score: ', coherence_lda)
 
 
