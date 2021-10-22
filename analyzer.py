@@ -8,6 +8,7 @@ import gensim
 import gensim.corpora as corpora
 from gensim.utils import simple_preprocess
 from gensim.models import CoherenceModel
+import pyLDAvis.gensim_models
 
 # spacy for lemmatization
 import spacy
@@ -151,5 +152,14 @@ class Analyzer:
                                              coherence='c_v')
         coherence_lda = coherence_model_lda.get_coherence()
         print_and_write('\nCoherence Score: ', coherence_lda)
+
+        # Visualize the topics
+        vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, id2word, mds='mmds')
+        pyLDAvis.save_html(vis, 'lda.html')
+
+
+
+
+
 
 
