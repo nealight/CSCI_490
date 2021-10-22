@@ -163,3 +163,89 @@ class Analyzer:
 
 
 
+        # Build LDA Mallet Model
+        mallet_path = "./mallet-2.0.8/bin/mallet"
+
+        ldamallet = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=20, id2word=id2word)
+        print_and_write(ldamallet.show_topics(formatted=False), func=pprint)
+
+        coherence_model_ldamallet = CoherenceModel(model=ldamallet, texts=data_lemmatized, dictionary=id2word, coherence='c_v')
+        coherence_ldamallet = coherence_model_ldamallet.get_coherence()
+        print_and_write('\nCoherence Score: ', coherence_ldamallet)
+
+        # Find the optimal number of topics for LDA
+        def compute_coherence_values(dictionary, corpus, texts, limit, start=2, step=3):
+            """
+            Compute c_v coherence for various number of topics
+
+            Parameters:
+            ----------
+            dictionary : Gensim dictionary
+            corpus : Gensim corpus
+            texts : List of input texts
+            limit : Max num of topics
+
+            Returns:
+            -------
+            model_list : List of LDA topic models
+            coherence_values : Coherence values corresponding to the LDA model with respective number of topics
+            """
+            coherence_values = []
+            model_list = []
+            for num_topics in range(start, limit, step):
+                model = gensim.models.wrappers.LdaMallet(mallet_path, corpus=corpus, num_topics=num_topics, id2word=id2word)
+                model_list.append(model)
+                coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+                coherence_values.append(coherencemodel.get_coherence())
+
+            return model_list, coherence_values
+
+        model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=6)
+        limit=40
+        start=2
+        step=6
+        x = range(start, limit, step)
+        plt.plot(x, coherence_values)
+        plt.xlabel("Num Topics")
+        plt.ylabel("Coherence score")
+        plt.legend(("coherence_values"), loc='best')
+        plt.show()
+        prev_cv = 0
+        optimal_model = None
+        for m, cv, model in zip(x, coherence_values, model_list):
+            print_and_write("Num Topics =", m, " has Coherence Value of", round(cv, 4))
+            if cv > prev_cv:
+                prev_cv = cv
+                optimal_model = model
+
+        # Finding the dominant topic in each sentence
+        def format_topics_sentences(ldamodel=lda_model, corpus=corpus, texts=data):
+            # Init output
+            sent_topics_df = pd.DataFrame()
+
+            # Get main topic in each document
+            for i, row in enumerate(ldamodel[corpus]):
+                row = sorted(row, key=lambda x: (x[1]), reverse=True)
+                # Get the Dominant topic, Perc Contribution and Keywords for each document
+                for j, (topic_num, prop_topic) in enumerate(row):
+                    if j == 0:  # => dominant topic
+                        wp = ldamodel.show_topic(topic_num)
+                        topic_keywords = ", ".join([word for word, prop in wp])
+                        sent_topics_df = sent_topics_df.append(pd.Series([int(topic_num), round(prop_topic,4), topic_keywords]), ignore_index=True)
+                    else:
+                        break
+            sent_topics_df.columns = ['Dominant_Topic', 'Perc_Contribution', 'Topic_Keywords']
+
+            # Add original text to the end of the output
+            contents = pd.Series(texts)
+            sent_topics_df = pd.concat([sent_topics_df, contents], axis=1)
+            return(sent_topics_df)
+
+        df_topic_sents_keywords = format_topics_sentences(ldamodel=optimal_model, corpus=corpus, texts=data)
+
+        # Format
+        df_dominant_topic = df_topic_sents_keywords.reset_index()
+        df_dominant_topic.columns = ['Document_No', 'Dominant_Topic', 'Topic_Perc_Contrib', 'Keywords', 'Text']
+
+        # Show
+        df_dominant_topic.head(10)
