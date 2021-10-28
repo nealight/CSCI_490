@@ -249,3 +249,41 @@ class Analyzer:
 
         # Show
         df_dominant_topic.head(10)
+
+        # Group top 5 sentences under each topic
+        sent_topics_sorteddf_mallet = pd.DataFrame()
+
+        sent_topics_outdf_grpd = df_topic_sents_keywords.groupby('Dominant_Topic')
+
+        for i, grp in sent_topics_outdf_grpd:
+            sent_topics_sorteddf_mallet = pd.concat([sent_topics_sorteddf_mallet, 
+                                                    grp.sort_values(['Perc_Contribution'], ascending=[0]).head(1)], 
+                                                    axis=0)
+
+        # Reset Index    
+        sent_topics_sorteddf_mallet.reset_index(drop=True, inplace=True)
+
+        # Format
+        sent_topics_sorteddf_mallet.columns = ['Topic_Num', "Topic_Perc_Contrib", "Keywords", "Text"]
+
+        # Show
+        sent_topics_sorteddf_mallet.head()
+
+
+        # Number of Documents for Each Topic
+        topic_counts = df_topic_sents_keywords['Dominant_Topic'].value_counts()
+
+        # Percentage of Documents for Each Topic
+        topic_contribution = round(topic_counts/topic_counts.sum(), 4)
+
+        # Topic Number and Keywords
+        topic_num_keywords = df_topic_sents_keywords[['Dominant_Topic', 'Topic_Keywords']]
+
+        # Concatenate Column wise
+        df_dominant_topics = pd.concat([topic_num_keywords, topic_counts, topic_contribution], axis=1)
+
+        # Change Column names
+        df_dominant_topics.columns = ['Dominant_Topic', 'Topic_Keywords', 'Num_Documents', 'Perc_Documents']
+
+        # Show
+        df_dominant_topics
