@@ -4,7 +4,7 @@ import analyzer
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     tweet_scrapper = scrape.Scrape()
-    df = tweet_scrapper.scrape_data(2020, 2021)
+    df = tweet_scrapper.scrape_data(2010, 2021, True)
 
     tweet_analyzer = analyzer.Analyzer(df)
     tweet_analyzer.analyze()
