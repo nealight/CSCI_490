@@ -5,7 +5,7 @@ import glob
 
 class Scrape:
 
-    def scrape_data(self, start:int, end:int, useExistingCSV: bool=True) -> pandas.DataFrame:
+    def scrape_data(self, start:int, end:int, useExistingCSV: bool=False) -> pandas.DataFrame:
         if useExistingCSV:
             df = pandas.read_csv("combined_csv.csv")
             return df
@@ -13,9 +13,9 @@ class Scrape:
         for year in range(start, end):
             # Configure
             c = twint.Config()
-            c.Search = (f"td OR technical debt")
+            c.Search = (f"td OR technical debt OR tech debt")
             c.Year = year
-            c.Limit = 1000
+            c.Limit = 2000
             c.Pandas = True
             c.Pandas_clean = True
             c.Store_csv = True
