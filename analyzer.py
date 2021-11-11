@@ -57,10 +57,10 @@ class Analyzer:
         data = df.tweet.values.tolist()
 
         # Remove new line characters
-        data = [re.sub('\s+', ' ', sent) for sent in data]
+        data = [re.sub('\s+', ' ', str(sent)) for sent in data]
 
         # Remove distracting single quotes
-        data = [re.sub("\'", "", sent) for sent in data]
+        data = [re.sub("\'", "", str(sent)) for sent in data]
 
         print_and_write(data[:1], func=pprint)
 
@@ -132,7 +132,7 @@ class Analyzer:
         lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                                     id2word=id2word,
                                                     num_topics=20,
-                                                    random_state=100,
+                                                    random_state=120,
                                                     update_every=1,
                                                     chunksize=100,
                                                     passes=10,

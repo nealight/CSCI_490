@@ -7,7 +7,8 @@ class Scrape:
 
     def scrape_data(self, start:int, end:int, useExistingCSV: bool=False) -> pandas.DataFrame:
         if useExistingCSV:
-            df = pandas.read_csv("combined_csv.csv")
+            df = pandas.read_csv("combined_csv.csv",
+                 lineterminator='\n')
             return df
 
         for year in range(start, end):
