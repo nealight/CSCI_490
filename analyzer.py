@@ -36,15 +36,15 @@ def print_and_write(*target: str or (str),  func=print):
     func(target)
 
 class Analyzer:
-    output_file_path = "LDA_result.txt"
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame, postfix=""):
         self.df = df
+        Analyzer.output_file_path = "LDA_results/LDA_result" + postfix +".txt"
         if os.path.exists(Analyzer.output_file_path):
             os.remove(Analyzer.output_file_path)
 
 
-    def analyze(self):
+    def analyze(self, test_alpha='auto', test_beta='auto'):
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -131,13 +131,16 @@ class Analyzer:
         # Build LDA model
         lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                                     id2word=id2word,
-                                                    num_topics=20,
-                                                    random_state=120,
+                                                    num_topics=25,
+                                                    random_state=100,
                                                     update_every=1,
                                                     chunksize=100,
                                                     passes=10,
-                                                    alpha='auto',
-                                                    per_word_topics=True)
+                                                    alpha=test_alpha,
+                                                    per_word_topics=True,
+                                                    eta = test_beta)
+                                                
+        print_and_write("alpha:", lda_model.alpha, "beta:", lda_model.eta)
 
         # Print the Keyword in the 10 topics
         print_and_write(lda_model.print_topics(), func=pprint)
@@ -205,11 +208,11 @@ class Analyzer:
         start=2
         step=6
         x = range(start, limit, step)
-        plt.plot(x, coherence_values)
-        plt.xlabel("Num Topics")
-        plt.ylabel("Coherence score")
-        plt.legend(("coherence_values"), loc='best')
-        plt.show()
+        # plt.plot(x, coherence_values)
+        # plt.xlabel("Num Topics")
+        # plt.ylabel("Coherence score")
+        # plt.legend(("coherence_values"), loc='best')
+        # plt.show()
         prev_cv = 0
         optimal_model = None
         for m, cv, model in zip(x, coherence_values, model_list):
