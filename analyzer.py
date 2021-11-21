@@ -289,4 +289,4 @@ class Analyzer:
         df_dominant_topics.columns = ['Dominant_Topic', 'Topic_Keywords', 'Num_Documents', 'Perc_Documents']
 
         # Show
-        df_dominant_topics
+        print(df_dominant_topics)
